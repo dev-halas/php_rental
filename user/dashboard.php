@@ -1,6 +1,11 @@
 <?php 
+session_start();
+if(!isset($_SESSION["customerID"])): 
 
+    header('location: login.php');
 
+else: 
+    
 
 ?>
 
@@ -16,19 +21,16 @@
 </head>
 <body>
 
+
     <div class="container">
         <h1>USER DASHBOARD</h1>
+        <a href="logout.php" class="button">Wyloguj</a>
         <?php 
-            //require_once '../includes/customer/dashboard.inc.php';
 
             require_once '../includes/customer/functions.php';
 
-            session_start();
-
-            if(isset($_SESSION["customerID"])){
-                echo 'LOGGED IN<br/>';
-                echo $_SESSION["customerID"];
-            }
+            
+            
             
 
             include '../admin/sql_connect.php';
@@ -77,7 +79,7 @@
                         <?php echo $reservation['to_date']; ?>
                     </div>
                     <div class="reservation--cost">
-                        <?php echo $reservation['cost']; ?>
+                        <?php echo $reservation['cost']; ?> zł
                     </div>
                 </div>
             <?php } ?>
@@ -90,5 +92,8 @@
 
 <?php 
 
+
+
+endif;
 
 ?>

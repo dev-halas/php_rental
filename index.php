@@ -142,7 +142,7 @@
 	<section id="reservation">
 		<div class="container-fluid">
 			<h1 class="text-center pt-4 pb-4 font-weight-bold">ZAREZERWUJ</h1>
-			<h1><?php echo $_SESSION["customerID"] ?></h1>
+			
 			<div class="row">
 				<div class="col-12 text-center text-danger">
 					<h2><span id="amount">0</span> zł</h2>

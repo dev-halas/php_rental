@@ -30,6 +30,9 @@
                             else if ($_GET["error"] == "statement_failed") {
                                 echo 'Ups... coś poszło nie tak.';
                             }
+                            else {
+                                
+                            }
                         ?>
                     </span>
                 </form>

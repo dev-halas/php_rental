@@ -1,38 +1,12 @@
 <?php
 include 'admin/sql_connect.php';
 
-function get_cars($type)
-{
-    
-    global $mysqli;
 
-
-    switch ($type) {
-        case 'available':
-            $sql = "SELECT id,name,photo_url,type,price FROM cars WHERE available = 1";
-            break;
-        case 'unavailable':
-            $sql = "SELECT cars.id,cars.name,cars.photo_url,cars.type,cars.price,reservations.to_date FROM cars INNER JOIN reservations ON cars.id = reservations.car_id
-        WHERE cars.available = 0";
-            break;
-        case 'select':
-            $sql = "SELECT id,name FROM cars WHERE available = 1";
-            break;
-    }
-
-    $result = $mysqli->query($sql);
-
-    echo $result;
-
-    $rows = $result->fetch_all(MYSQLI_ASSOC);
-    return $rows;
-    
-}
 
 function generate_dashboard()
 {
 
-    $sql = "SELECT cars.name, customers.customerName, customers.customerSurname, reservations.cost, reservations.to_date FROM reservations INNER JOIN cars ON reservations.car_id = cars.id INNER JOIN customers ON customers.customerID = reservations.customer_id;";
+    $sql = "SELECT cars.name, customers.customerName, customers.customerSurname, reservations.cost, reservations.to_date, cars.id FROM reservations INNER JOIN cars ON reservations.car_id = cars.id INNER JOIN customers ON customers.customerID = reservations.customer_id;";
 
     $mysqli = OpenConnDB();
     $result = $mysqli->query($sql);
@@ -127,6 +101,24 @@ function selectAvaliableCars(){
 }
 
 
+function changeCarStatus($car_id) {
+    $mysqli = OpenConnDB();
+    $changeStatus_querry = "UPDATE cars SET available = 0 WHERE id = $car_id";
+
+    $statement = mysqli_stmt_init($mysqli);
+
+    if(!mysqli_stmt_prepare($statement, $changeStatus_querry)) {
+        header("location: ../../user/index.php?error=statement_failed");
+        exit();
+    }
+
+    mysqli_stmt_bind_param($statement, "i", $car_id);
+    mysqli_stmt_execute($statement);
+    mysqli_stmt_close($statement);
+
+    CloseConDB($mysqli);
+}
+
 
 function reservation($customerID, $car_id, $termin, $days, $hours) {
     $mysqli = OpenConnDB();
@@ -155,27 +147,26 @@ function reservation($customerID, $car_id, $termin, $days, $hours) {
     mysqli_stmt_execute($statement);
     mysqli_stmt_close($statement);
 
+    changeCarStatus($car_id);
+
     header("Location: index.php");
 
-    exit();
 
-    //$reservation_querry = "INSERT INTO reservations (customer_id, car_id , from_date, to_date, cost) VALUES ('$customerID', '$car_id', '$from_date', '$to_date', '$cost')";
-
-    //$mysqli->query($reservation_querry);
-
-    /*
-        $customerID = $mysqli->insert_id;
-        $sql_3 = "INSERT INTO reservations(`customerID`, `car_id`,`from_date`,`to_date`,`cost`) VALUES (?,?,?,?,?)";
-        if ($statement_2 = $mysqli->prepare($sql_3)) {
-            if ($statement_2->bind_param('iissi', $customerID, $car_id, $from_date, $to_date, $cost)) {
-                $statement_2->execute();
-                $mysqli->query("UPDATE cars SET available = 0 WHERE id = $car_id");
-
-                
-            }
-        }
-    */
     
+    CloseConDB($mysqli);
+}
+
+
+function getAllCars(){
+    $sql = "SELECT * FROM cars";
+    $mysqli = OpenConnDB();
+    $result = $mysqli->query($sql);
+
+    if ($result->num_rows > 0) {
+        $avaliableCars = $result->fetch_all(MYSQLI_ASSOC);
+        return $avaliableCars;
+    }
+
     CloseConDB($mysqli);
 }
 
