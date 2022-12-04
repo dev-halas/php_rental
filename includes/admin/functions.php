@@ -1,10 +1,11 @@
-<?php 
+<?php
 
-function adminExist($conn, $adminName, $adminEmail){
+function adminExist($conn, $adminName, $adminEmail)
+{
     $sql = "SELECT * FROM admins WHERE adminName = ? OR adminEmail = ?;";
     $statement = mysqli_stmt_init($conn);
 
-    if(!mysqli_stmt_prepare($statement, $sql)) {
+    if (!mysqli_stmt_prepare($statement, $sql)) {
         header("location: ../../admin/login.php?error=statement_failed");
         exit();
     }
@@ -14,10 +15,9 @@ function adminExist($conn, $adminName, $adminEmail){
 
     $data = mysqli_stmt_get_result($statement);
 
-    if($res = mysqli_fetch_assoc($data)){
+    if ($res = mysqli_fetch_assoc($data)) {
         return $res;
-    }
-    else{
+    } else {
         $result = false;
         return $result;
     }
@@ -25,69 +25,41 @@ function adminExist($conn, $adminName, $adminEmail){
     mysqli_stmt_close($statement);
 }
 
-function emptyFieldsLogin($adminLogin, $password) {
+function emptyFieldsLogin($adminLogin, $password)
+{
 
-    if(empty($adminLogin) || empty($password)){
+    if (empty($adminLogin) || empty($password)) {
         return true;
     }
-    
+
     return false;
 }
 
-function adminLogin($conn, $adminLogin, $password) {
+function adminLogin($conn, $adminLogin, $password)
+{
     $adminExist = adminExist($conn, $adminLogin, $adminLogin);
 
-    if($adminExist === false) {
+    if ($adminExist === false) {
         header("location: ../../admin/login.php?error=invalid_credentials");
         exit();
     }
 
-    
+
     $hashedPassword = $adminExist["adminPassword"];
     $checkPasswordMatch = password_verify($password, $hashedPassword);
 
     echo $hashedPassword . '<br>';
     echo password_hash($password, PASSWORD_DEFAULT);
 
-    
 
-    if($checkPasswordMatch === false) {
+
+    if ($checkPasswordMatch === false) {
         header("location: ../../admin/login.php?error=invalid_credentials");
         exit();
-    }
-
-    else if ($checkPasswordMatch === true) {
+    } else if ($checkPasswordMatch === true) {
         session_start();
         $_SESSION["adminId"] = $adminExist["adminId"];
         header("location: ../../admin/dashboard.php");
         exit();
-    } 
-
-    
-    
-}
-
-function createAdmin($conn, $adminName, $adminEmail, $adminPassword) {
-    
-    $sql = "INSERT INTO admins (adminName, adminEmail, adminPassword) VALUES (?, ?, ?);";
-    
-    $statement = mysqli_stmt_init($conn);
-
-    if(!mysqli_stmt_prepare($statement, $sql)) {
-        header("location: ../../admin/register.php?error=statement_failed");
-        exit();
     }
-
-    $hashedPassword = password_hash($adminPassword, PASSWORD_DEFAULT);
-
-    mysqli_stmt_bind_param($statement, "sss", $adminName, $adminEmail, $hashedPassword);
-    mysqli_stmt_execute($statement);
-    mysqli_stmt_close($statement);
-    header("location: ../../admin/register.php?register_success");
-    exit();
 }
-
-
-    
-
-

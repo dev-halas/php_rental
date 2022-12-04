@@ -1,8 +1,9 @@
-<?php 
+<?php
 
 
-function emptyFieldsRegister($customerName, $customerSurname, $customerEmail, $customerTel, $customerPassword, $customerPassword_repeat) {
-    if(
+function emptyFieldsRegister($customerName, $customerSurname, $customerEmail, $customerTel, $customerPassword, $customerPassword_repeat)
+{
+    if (
         empty($customerName) ||
         empty($customerSurname) ||
         empty($customerEmail) ||
@@ -16,7 +17,8 @@ function emptyFieldsRegister($customerName, $customerSurname, $customerEmail, $c
     return false;
 }
 
-function invalidPhone($customerPhone) {
+function invalidPhone($customerPhone)
+{
 
     $pattern = "/^(?:(?:(?:(?:\+|00)\d{2})?[ -]?(?:(?:\(0?\d{2}\))|(?:0?\d{2})))?[ -]?(?:\d{3}[- ]?\d{2}[- ]?\d{2}|\d{2}[- ]?\d{2}[- ]?\d{3}|\d{7})|(?:(?:(?:\+|00)\d{2})?[ -]?\d{3}[ -]?\d{3}[ -]?\d{3}))$/";
     $isPhoneValid = preg_match($pattern, $customerPhone);
@@ -28,29 +30,32 @@ function invalidPhone($customerPhone) {
     return false;
 }
 
-function invalidEmail($customerEmail) {
-    
-    if(!filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+function invalidEmail($customerEmail)
+{
+
+    if (!filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
         return true;
     }
 
     return false;
 }
 
-function passwordMatch($customerPassword, $customerPassword_repeat) {
+function passwordMatch($customerPassword, $customerPassword_repeat)
+{
     //($customerPassword !== $customerPassword_repeat) ? $result = true : $result = false;
-    if($customerPassword !== $customerPassword_repeat) {
+    if ($customerPassword !== $customerPassword_repeat) {
         return true;
     }
 
     return false;
 }
 
-function customerExist($conn, $customerEmail, $customerPhone){
+function customerExist($conn, $customerEmail, $customerPhone)
+{
     $sql = "SELECT * FROM customers WHERE customerEmail = ? OR customerPhone = ?;";
     $statement = mysqli_stmt_init($conn);
 
-    if(!mysqli_stmt_prepare($statement, $sql)) {
+    if (!mysqli_stmt_prepare($statement, $sql)) {
         header("location: ../../user/register.php?error=statement_failed");
         exit();
     }
@@ -60,10 +65,9 @@ function customerExist($conn, $customerEmail, $customerPhone){
 
     $data = mysqli_stmt_get_result($statement);
 
-    if($res = mysqli_fetch_assoc($data)){
+    if ($res = mysqli_fetch_assoc($data)) {
         return $res;
-    }
-    else{
+    } else {
         $result = false;
         return $result;
     }
@@ -71,16 +75,17 @@ function customerExist($conn, $customerEmail, $customerPhone){
     mysqli_stmt_close($statement);
 }
 
-function createUser($conn, $customerName, $customerSurname, $customerEmail, $customerPhone, $customerPassword) {
-    $sql = 
+function createUser($conn, $customerName, $customerSurname, $customerEmail, $customerPhone, $customerPassword)
+{
+    $sql =
         "INSERT INTO customers 
         (customerName, customerSurname, customerEmail, customerPhone, customerPassword) 
         VALUES (?, ?, ?, ?, ?);
         ";
-    
+
     $statement = mysqli_stmt_init($conn);
 
-    if(!mysqli_stmt_prepare($statement, $sql)) {
+    if (!mysqli_stmt_prepare($statement, $sql)) {
         header("location: ../../user/register.php?error=statement_failed");
         exit();
     }
@@ -90,24 +95,26 @@ function createUser($conn, $customerName, $customerSurname, $customerEmail, $cus
     mysqli_stmt_bind_param($statement, "sssss", $customerName, $customerSurname, $customerEmail, $customerPhone, $hashedPassword);
     mysqli_stmt_execute($statement);
     mysqli_stmt_close($statement);
-    header("location: ../../user/register.php?register_success");
+    header("location: ../../user/register.php?success=register_success");
     exit();
 }
 
 
-function emptyFieldsLogin($customerLogin, $password) {
+function emptyFieldsLogin($customerLogin, $password)
+{
 
-    if(empty($customerLogin) || empty($password)){
+    if (empty($customerLogin) || empty($password)) {
         return true;
     }
-    
+
     return false;
 }
 
-function customerLogin($conn, $customerLogin, $password) {
+function customerLogin($conn, $customerLogin, $password)
+{
     $customerExist = customerExist($conn, $customerLogin, $customerLogin);
 
-    if($customerExist === false) {
+    if ($customerExist === false) {
         header("location: ../../user/login.php?error=invalid_credentials");
         exit();
     }
@@ -116,30 +123,28 @@ function customerLogin($conn, $customerLogin, $password) {
     $checkPasswordMatch = password_verify($password, $hashedPassword);
 
 
-    if($checkPasswordMatch === false) {
+    if ($checkPasswordMatch === false) {
         header("location: ../../user/login.php?error=invalid_credentials");
         exit();
-    }
-
-    else if ($checkPasswordMatch === true) {
+    } else if ($checkPasswordMatch === true) {
         session_start();
         $_SESSION["customerID"] = $customerExist["customerID"];
         $_SESSION["customerName"] = $customerExist["customerName"];
         header("location: ../../user/dashboard.php");
         exit();
-    } 
-    
+    }
 }
 
 
-function customerReservation($conn, $customerID) {
+function customerReservation($conn, $customerID)
+{
     //$sql = "SELECT * FROM reservations WHERE customer_id = ?;";
-    $reservation_querry = "SELECT cars.name, cars.photo_url, reservations.from_date, reservations.to_date, reservations.cost FROM reservations INNER JOIN cars ON reservations.car_id = cars.id INNER JOIN customers ON customers.customerID = reservations.customer_id WHERE customers.customerID = ?;";
-    //$sql2 = "SELECT cars.name, cars.photo_url, reservations.cost, reservations.to_date FROM reservations WHERE customers.customer_id = ? INNER JOIN cars ON reservations.car_id = cars.id INNER JOIN customers ON customers.customerID = reservations.customer_id;";
+    $reservation_querry = "SELECT items.name, items.photo_url, reservations.from_date, reservations.to_date, reservations.cost FROM reservations INNER JOIN items ON reservations.item_id = items.id INNER JOIN customers ON customers.customerID = reservations.customer_id WHERE customers.customerID = ?;";
+    //$sql2 = "SELECT items.name, items.photo_url, reservations.cost, reservations.to_date FROM reservations WHERE customers.customer_id = ? INNER JOIN items ON reservations.item_id = items.id INNER JOIN customers ON customers.customerID = reservations.customer_id;";
 
     $statement = mysqli_stmt_init($conn);
 
-    if(!mysqli_stmt_prepare($statement, $reservation_querry)) {
+    if (!mysqli_stmt_prepare($statement, $reservation_querry)) {
         header("location: ../../user/dashboard.php?error=statement_failed");
         exit();
     }
@@ -152,4 +157,3 @@ function customerReservation($conn, $customerID) {
     return $reservations;
     exit();
 }
-

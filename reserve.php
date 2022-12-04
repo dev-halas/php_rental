@@ -1,10 +1,10 @@
 <?php
-    
-    session_start();
+
+session_start();
 
 if (!empty($_POST)) {
     $customerID = $_SESSION["customerID"];
-    $car_id = $_POST['car'];
+    $item_id = $_POST['item'];
     $termin = $_POST['date'];
     $days = $_POST['days'];
     $hours = $_POST['hours'];
@@ -24,7 +24,5 @@ if (!empty($_POST)) {
     }
 
     require('functions.php');
-    reservation($customerID, $car_id, $termin, $days, $hours);
-    
+    reservation($customerID, $item_id, $termin, $days, $hours);
 }
-

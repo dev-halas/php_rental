@@ -1,15 +1,15 @@
-
-
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../CSS/reset.css">
-	<link rel="stylesheet" href="../CSS/core.css">
+    <link rel="stylesheet" href="../CSS/core.css">
     <title>Logowanie</title>
 </head>
+
 <body class="userTheme">
     <main class="userPage">
         <div class="container">
@@ -26,25 +26,22 @@
                     <button type="submit" name="submit">Zarejetruj</button>
 
                     <span class="errorMessage">
-                        <?php 
+                        <?php
+                        if (isset($_GET["error"])) :
                             if ($_GET["error"] == "empty_fields") {
                                 echo 'Podaj poprawny login i hasło aby zalogować się do konta';
-                            }
-                            else if ($_GET["error"] == "invalid_phoneNumber") {
+                            } else if ($_GET["error"] == "invalid_phoneNumber") {
                                 echo 'Wpisz poprawny numer telefonu';
-                            }
-                            else if ($_GET["error"] == "invalid_email") {
+                            } else if ($_GET["error"] == "invalid_email") {
                                 echo 'Wpisz poprawny adres email';
-                            }
-                            else if ($_GET["error"] == "passwords_are_different") {
+                            } else if ($_GET["error"] == "passwords_are_different") {
                                 echo 'Hasła muszą być identyczne';
-                            }
-                            else if ($_GET["error"] == "account_already_exist") {
+                            } else if ($_GET["error"] == "account_already_exist") {
                                 echo 'Konto z tym emailem lub numerem telfonu juz istnieje';
-                            }
-                            else if ($_GET["error"] == "statement_failed") {
+                            } else if ($_GET["error"] == "statement_failed") {
                                 echo 'Ups... coś poszło nie tak.';
                             }
+                        endif;
                         ?>
                     </span>
                 </form>
@@ -52,5 +49,5 @@
         </div>
     </main>
 </body>
-</html>
 
+</html>

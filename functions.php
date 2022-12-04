@@ -6,7 +6,7 @@ include 'admin/sql_connect.php';
 function generate_dashboard()
 {
 
-    $sql = "SELECT cars.name, customers.customerName, customers.customerSurname, reservations.cost, reservations.to_date, cars.id FROM reservations INNER JOIN cars ON reservations.car_id = cars.id INNER JOIN customers ON customers.customerID = reservations.customer_id;";
+    $sql = "SELECT items.name, customers.customerName, customers.customerSurname, reservations.cost, reservations.to_date, items.id FROM reservations INNER JOIN items ON reservations.item_id = items.id INNER JOIN customers ON customers.customerID = reservations.customer_id;";
 
     $mysqli = OpenConnDB();
     $result = $mysqli->query($sql);
@@ -19,7 +19,7 @@ function generate_dashboard()
     CloseConDB($mysqli);
 }
 
-function reserve($name, $surname, $phone_number, $car_id, $termin, $days, $hours)
+function reserve($name, $surname, $phone_number, $item_id, $termin, $days, $hours)
 {
     global $mysqli;
 
@@ -27,7 +27,7 @@ function reserve($name, $surname, $phone_number, $car_id, $termin, $days, $hours
 
     $to_date = date('Y-m-d H:i', strtotime($from_date . '+ ' . $days . ' days + ' . $hours . ' hours'));
 
-    $sql = "SELECT price FROM cars WHERE id = $car_id";
+    $sql = "SELECT price FROM items WHERE id = $item_id";
 
     $result = $mysqli->query($sql);
     $row = $result->fetch_row();
@@ -45,11 +45,11 @@ function reserve($name, $surname, $phone_number, $car_id, $termin, $days, $hours
             $statement->execute();
 
             $client_id = $mysqli->insert_id;
-            $sql_3 = "INSERT INTO reservations(`client_id`, `car_id`,`from_date`,`to_date`,`cost`) VALUES (?,?,?,?,?)";
+            $sql_3 = "INSERT INTO reservations(`client_id`, `item_id`,`from_date`,`to_date`,`cost`) VALUES (?,?,?,?,?)";
             if ($statement_2 = $mysqli->prepare($sql_3)) {
-                if ($statement_2->bind_param('iissi', $client_id, $car_id, $from_date, $to_date, $cost)) {
+                if ($statement_2->bind_param('iissi', $client_id, $item_id, $from_date, $to_date, $cost)) {
                     $statement_2->execute();
-                    $mysqli->query("UPDATE cars SET available = 0 WHERE id = $car_id");
+                    $mysqli->query("UPDATE items SET available = 0 WHERE id = $item_id");
 
                     header("Location:index.php");
                 }
@@ -61,73 +61,72 @@ function reserve($name, $surname, $phone_number, $car_id, $termin, $days, $hours
     }
 }
 
-function getAvaliableCars(){
-    $sql = "SELECT id,name,photo_url,type,price FROM cars WHERE available >= 1";
+function getAvaliableItems()
+{
+    $sql = "SELECT id,name,photo_url,type,price FROM items WHERE available >= 1";
     $mysqli = OpenConnDB();
     $result = $mysqli->query($sql);
 
     if ($result->num_rows > 0) {
-        $avaliableCars = $result->fetch_all(MYSQLI_ASSOC);
-        return $avaliableCars;
+        $avaliableItems = $result->fetch_all(MYSQLI_ASSOC);
+        return $avaliableItems;
     }
 
     CloseConDB($mysqli);
 }
 
-function getUnavaliableCars(){
-    $sql = "SELECT id, name, photo_url, type, price FROM cars WHERE available < 1";
+function getUnavaliableItems()
+{
+    $sql = "SELECT items.id,items.name,items.photo_url,items.type,items.price,reservations.to_date FROM items INNER JOIN reservations ON items.id = reservations.item_id
+    WHERE items.available = 0";
     $mysqli = OpenConnDB();
     $result = $mysqli->query($sql);
 
     if ($result->num_rows > 0) {
-        $unavaliableCars = $result->fetch_all(MYSQLI_ASSOC);
-        return $unavaliableCars;
+        $unavaliableItems = $result->fetch_all(MYSQLI_ASSOC);
+        return $unavaliableItems;
+    } else {
+        echo '<p><u>' . 'Obecnie wszystkie urządzenia są dostępne.' . '</u></p>';
     }
 
     CloseConDB($mysqli);
 }
 
-function selectAvaliableCars(){
-    $sql = "SELECT id,name FROM cars WHERE available >= 1";
+function selectAvaliableItems()
+{
+    $sql = "SELECT id,name FROM items WHERE available >= 1";
     $mysqli = OpenConnDB();
     $result = $mysqli->query($sql);
 
     if ($result->num_rows > 0) {
-        $selectCars = $result->fetch_all(MYSQLI_ASSOC);
-        return $selectCars;
+        $selectItems = $result->fetch_all(MYSQLI_ASSOC);
+        return $selectItems;
     }
 
     CloseConDB($mysqli);
 }
 
 
-function changeCarStatus($car_id) {
+function changeItemStatus($item_id)
+{
     $mysqli = OpenConnDB();
-    $changeStatus_querry = "UPDATE cars SET available = 0 WHERE id = $car_id";
+    $changeStatus_querry = "UPDATE items SET available = 0 WHERE id = $item_id";
 
-    $statement = mysqli_stmt_init($mysqli);
-
-    if(!mysqli_stmt_prepare($statement, $changeStatus_querry)) {
-        header("location: ../../user/index.php?error=statement_failed");
-        exit();
-    }
-
-    mysqli_stmt_bind_param($statement, "i", $car_id);
-    mysqli_stmt_execute($statement);
-    mysqli_stmt_close($statement);
+    $mysqli->query($changeStatus_querry);
 
     CloseConDB($mysqli);
 }
 
 
-function reservation($customerID, $car_id, $termin, $days, $hours) {
+function reservation($customerID, $item_id, $termin, $days, $hours)
+{
     $mysqli = OpenConnDB();
-    
+
     $from_date = $termin;
 
     $to_date = date('Y-m-d H:i', strtotime($from_date . '+ ' . $days . ' days + ' . $hours . ' hours'));
 
-    $sql = "SELECT price FROM cars WHERE id = $car_id";
+    $sql = "SELECT price FROM items WHERE id = $item_id";
 
     $result = $mysqli->query($sql);
     $row = $result->fetch_row();
@@ -135,39 +134,38 @@ function reservation($customerID, $car_id, $termin, $days, $hours) {
     $price = $row[0];
     $cost = ($days * 24 + $hours) * $price;
 
-    $reservation_querry = "INSERT INTO reservations (customer_id, car_id , from_date, to_date, cost) VALUES (?, ?, ?, ?, ?)";
+    $reservation_querry = "INSERT INTO reservations (customer_id, item_id , from_date, to_date, cost) VALUES (?, ?, ?, ?, ?)";
     $statement = mysqli_stmt_init($mysqli);
 
-    if(!mysqli_stmt_prepare($statement, $reservation_querry)) {
+    if (!mysqli_stmt_prepare($statement, $reservation_querry)) {
         header("location: ../../user/index.php?error=statement_failed");
         exit();
     }
 
-    mysqli_stmt_bind_param($statement, "iissi", $customerID, $car_id, $from_date, $to_date, $cost);
+    mysqli_stmt_bind_param($statement, "iissi", $customerID, $item_id, $from_date, $to_date, $cost);
     mysqli_stmt_execute($statement);
     mysqli_stmt_close($statement);
 
-    changeCarStatus($car_id);
+    changeItemStatus($item_id);
 
     header("Location: index.php");
 
 
-    
+
     CloseConDB($mysqli);
 }
 
 
-function getAllCars(){
-    $sql = "SELECT * FROM cars";
+function getAllItems()
+{
+    $sql = "SELECT * FROM items";
     $mysqli = OpenConnDB();
     $result = $mysqli->query($sql);
 
     if ($result->num_rows > 0) {
-        $avaliableCars = $result->fetch_all(MYSQLI_ASSOC);
-        return $avaliableCars;
+        $avaliableItems = $result->fetch_all(MYSQLI_ASSOC);
+        return $avaliableItems;
     }
 
     CloseConDB($mysqli);
 }
-
-

@@ -15,13 +15,13 @@ function scroll(){
         document.getElementById('up-button').style.display = "none";
     }
 }
-function reserve(car){
-    var select = document.getElementById('car');
+function reserve(item){
+    var select = document.getElementById('item');
     var options_selected = select.querySelectorAll('option[selected]');
     options_selected.forEach(function(option){
         option.removeAttribute("selected");
     });
-    var option = select.querySelector('option[value="'+car+'"]');
+    var option = select.querySelector('option[value="'+item+'"]');
     option.setAttribute("selected","selected");
     smoothScroll('#reservation');
 }
